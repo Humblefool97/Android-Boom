@@ -12,7 +12,7 @@ android {
     buildToolsVersion "24.0.1"
 
     defaultConfig {
-        applicationId "com.google.firebase.udacity.friendlychat"
+        applicationId "com.google.firebase.udacity.com.humblefool.android.gchat"
         minSdkVersion 16
         targetSdkVersion 24
         versionCode 1
