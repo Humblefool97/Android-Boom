@@ -1,13 +1,21 @@
-# FriendlyChat
+# gChat (WIP)
 
 This repository contains demonstration code for some of the topics like
-1.Firebase
-2.Caching:No difference in offline and Online
-3.MVP\MVC\Design Patterns
-4.Image Loading:Glide
-5.Constraint Layout
-6.Latest UI elements
-7.Volleyplus
+
+- [x] `Firebase`
+
+- [ ] `Caching:No difference in offline and Online`
+
+- [ ] `MVP\MVC\Design Patterns`
+
+- [ ] `Image Loading:Glide`
+
+- [ ] `Constraint Layout`
+
+- [ ] `Latest UI elements`
+
+- [ ] `Volleyplus`
+
 
 ## Overview
 
