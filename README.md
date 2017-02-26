@@ -1,10 +1,25 @@
-# FriendlyChat
+# gChat (WIP)
 
-This repository contains code for the FriendlyChat project in the [Firebase in a Weekend: Android by Google](https://www.udacity.com/course/firebase-in-a-weekend-by-google-android--ud0352) Udacity course.
+This repository contains demonstration code for some of the topics like
+
+- [x] `Firebase`
+
+- [ ] `Caching:No difference in offline and Online`
+
+- [ ] `MVP\MVC\Design Patterns`
+
+- [ ] `Image Loading:Glide`
+
+- [ ] `Constraint Layout`
+
+- [ ] `Latest UI elements`
+
+- [ ] `Volleyplus`
+
 
 ## Overview
 
-FriendlyChat is an app that allows users to send and receive text and photos in realtime across platforms.
+gChat is an app that allows users to send and receive text and photos in realtime across platforms.
 
 ## Setup
 
