@@ -1,4 +1,4 @@
-package com.google.firebase.udacity.gchat;
+package com.google.firebase.udacity.gchat.utils;
 
 import android.content.Context;
 import android.support.design.widget.Snackbar;

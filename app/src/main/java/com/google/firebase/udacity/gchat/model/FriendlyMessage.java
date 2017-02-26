@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.firebase.udacity.gchat;
+package com.google.firebase.udacity.gchat.model;
 
 public class FriendlyMessage {
 

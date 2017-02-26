@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.firebase.udacity.gchat;
+package com.google.firebase.udacity.gchat.activities;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
@@ -30,7 +32,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 
 import com.firebase.ui.auth.AuthUI;
@@ -45,6 +46,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.google.firebase.udacity.gchat.adapters.ChatRecyclerViewAdapter;
+import com.google.firebase.udacity.gchat.model.FriendlyMessage;
+import com.google.firebase.udacity.gchat.utils.GChatUtils;
+import com.google.firebase.udacity.gchat.R;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,8 +65,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String ANONYMOUS = "anonymous";
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
 
-    private ListView mMessageListView;
-    private MessageAdapter mMessageAdapter;
+    private RecyclerView mChatRecyclerView;
+    private ChatRecyclerViewAdapter mMessageAdapter;
     private ProgressBar mProgressBar;
     private ImageButton mPhotoPickerButton;
     private EditText mMessageEditText;
@@ -106,18 +111,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // Initialize references to views
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-        mMessageListView = (ListView) findViewById(R.id.messageListView);
+        mChatRecyclerView = (RecyclerView) findViewById(R.id.messageRecylerView);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        mChatRecyclerView.setLayoutManager(linearLayoutManager);
+
         mPhotoPickerButton = (ImageButton) findViewById(R.id.photoPickerButton);
         mMessageEditText = (EditText) findViewById(R.id.messageEditText);
         mSendButton = (Button) findViewById(R.id.sendButton);
         mSendButton.setOnClickListener(this);
         // Initialize message ListView and its adapter
         List<FriendlyMessage> friendlyMessages = new ArrayList<>();
-        mMessageAdapter = new MessageAdapter(this, R.layout.item_message, friendlyMessages);
-        mMessageListView.setAdapter(mMessageAdapter);
+        mMessageAdapter = new ChatRecyclerViewAdapter(this, friendlyMessages,mFirebaseAuth);
+        mChatRecyclerView.setAdapter(mMessageAdapter);
 
         // Initialize progress bar
-        mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+        mProgressBar.setVisibility(ProgressBar.VISIBLE);
 
         // ImagePickerButton shows an image picker to upload a image for a message
         mPhotoPickerButton.setOnClickListener(new View.OnClickListener() {
@@ -292,7 +300,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                     FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
-                    mMessageAdapter.add(friendlyMessage);
+                    mMessageAdapter.setData(friendlyMessage);
+                    mProgressBar.setVisibility(View.GONE);
                 }
 
                 @Override
