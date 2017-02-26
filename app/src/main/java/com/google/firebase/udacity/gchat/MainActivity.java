@@ -15,11 +15,12 @@
  */
 package com.google.firebase.udacity.gchat;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.InputFilter;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -31,15 +32,23 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
+import com.firebase.ui.auth.AuthUI;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "MainActivity";
+    private static final int RC_SIGN_IN = 1;
 
     public static final String ANONYMOUS = "anonymous";
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
@@ -54,6 +63,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String mUsername;
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mFirebaseDatabaseRef;
+    private ChildEventListener mChildEventListener;
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseAuth.AuthStateListener mFirebaseAuthStateListener;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +77,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //Initialize firebase
         mFirebaseDatabase = FirebaseDatabase.getInstance();
+        mFirebaseAuth=FirebaseAuth.getInstance();
+
         mFirebaseDatabaseRef= mFirebaseDatabase.getReference().child(GChatUtils.FIREBASE_ROOT_MESSAGES);
 
         // Initialize references to views
@@ -108,8 +123,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void afterTextChanged(Editable editable) {
             }
         });
+
+
+
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)});
 
+        mFirebaseAuthStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if(user!=null){
+                    onSignedInInitialize(user.getDisplayName());
+                }else{
+                    onSignedOutCleanup();
+                    startActivityForResult(
+                            AuthUI.getInstance()
+                                    .createSignInIntentBuilder()
+                                    .setIsSmartLockEnabled(false)
+                                    .setProviders(Arrays.asList(new AuthUI.IdpConfig.Builder(AuthUI.EMAIL_PROVIDER).
+                                            build(),
+                                            new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build()))
+                                    .build(),
+                            RC_SIGN_IN);
+                }
+            }
+        };
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode == RESULT_CANCELED){
+            finish();
+        }
     }
 
     @Override
@@ -143,4 +190,78 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // Clear input box
         mMessageEditText.setText("");
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mFirebaseAuth.addAuthStateListener(mFirebaseAuthStateListener);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(mFirebaseAuthStateListener !=null) {
+            mFirebaseAuth.removeAuthStateListener(mFirebaseAuthStateListener);
+        }
+        cleanupReadDatabaseListener();
+        mMessageAdapter.clear();
+
+    }
+
+    private void onSignedInInitialize(String displayName) {
+        mUsername = displayName;
+        initializeReadDatabase();
+    }
+
+    private void onSignedOutCleanup() {
+        mUsername = ANONYMOUS;
+        cleanupReadDatabaseListener();
+        mMessageAdapter.clear();
+
+    }
+
+
+    private void initializeReadDatabase(){
+
+        if(mChildEventListener == null){
+
+            mChildEventListener = new ChildEventListener() {
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                    FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
+                    mMessageAdapter.add(friendlyMessage);
+                }
+
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            };
+
+            mFirebaseDatabaseRef.addChildEventListener(mChildEventListener);
+        }
+    }
+
+    private void cleanupReadDatabaseListener(){
+        if(mChildEventListener!=null){
+            mFirebaseDatabaseRef.removeEventListener(mChildEventListener);
+            mChildEventListener = null;
+        }
+    }
+
 }

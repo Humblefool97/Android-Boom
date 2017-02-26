@@ -38,7 +38,21 @@ dependencies {
     compile 'com.android.support:design:24.2.0'
     compile 'com.android.support:appcompat-v7:24.2.0'
     compile 'com.google.firebase:firebase-core:10.2.0'
-    compile 'com.google.firebase:firebase-database:10.2.0'
+
+    // FirebaseUI Database only
+    compile 'com.firebaseui:firebase-ui-database:1.2.0'
+
+    // FirebaseUI Auth only
+    compile 'com.firebaseui:firebase-ui-auth:+'
+
+    // FirebaseUI Storage only
+    compile 'com.firebaseui:firebase-ui-storage:1.2.0'
+
+    // Single target that includes all FirebaseUI libraries above
+    compile 'com.firebaseui:firebase-ui:+'
+
+    compile 'com.google.firebase:firebase-auth:10.2.0'
+
 
 
     // Displaying images
