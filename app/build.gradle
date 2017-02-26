@@ -12,7 +12,7 @@ android {
     buildToolsVersion "24.0.1"
 
     defaultConfig {
-        applicationId "com.google.firebase.udacity.com.humblefool.android.gchat"
+        applicationId "com.google.firebase.udacity.gchat"
         minSdkVersion 16
         targetSdkVersion 24
         versionCode 1
@@ -37,7 +37,11 @@ dependencies {
 
     compile 'com.android.support:design:24.2.0'
     compile 'com.android.support:appcompat-v7:24.2.0'
+    compile 'com.google.firebase:firebase-core:10.2.0'
+    compile 'com.google.firebase:firebase-database:10.2.0'
+
 
     // Displaying images
     compile 'com.github.bumptech.glide:glide:3.6.1'
 }
+apply plugin: 'com.google.gms.google-services'
