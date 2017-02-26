@@ -16,6 +16,7 @@
 package com.google.firebase.udacity.gchat;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -33,6 +34,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -40,6 +42,9 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private static final String TAG = "MainActivity";
     private static final int RC_SIGN_IN = 1;
+    private static final int RC_PHOTO_PICKER =  2;
+
 
     public static final String ANONYMOUS = "anonymous";
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
@@ -59,13 +66,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageButton mPhotoPickerButton;
     private EditText mMessageEditText;
     private Button mSendButton;
-
     private String mUsername;
+
+    //Firebase Database fields
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mFirebaseDatabaseRef;
     private ChildEventListener mChildEventListener;
+
+    //Firebase Authentication fields
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mFirebaseAuthStateListener;
+
+    //Firebase storage Fields
+    private FirebaseStorage mFirebaseStorage;
+    private StorageReference mFirebaseStorageReference;
+
 
 
     @Override
@@ -75,11 +90,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mUsername = ANONYMOUS;
 
-        //Initialize firebase
+        //Initialize firebase DB
         mFirebaseDatabase = FirebaseDatabase.getInstance();
+        mFirebaseDatabaseRef= mFirebaseDatabase.getReference().child(GChatUtils.FIREBASE_ROOT_MESSAGES);
+
+        //Initialize firebase auth
         mFirebaseAuth=FirebaseAuth.getInstance();
 
-        mFirebaseDatabaseRef= mFirebaseDatabase.getReference().child(GChatUtils.FIREBASE_ROOT_MESSAGES);
+        //Initialize firebase storage
+        mFirebaseStorage = FirebaseStorage.getInstance();
+        mFirebaseStorageReference = mFirebaseStorage.getReference().child(GChatUtils.FIREBASE_ROOT_STORAGE);
+
+
+
 
         // Initialize references to views
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -100,8 +123,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mPhotoPickerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: Fire an intent to show an image picker
+                onPhotoButtonClicked();
             }
+
+
         });
 
         // Enable Send button when there's text to send
@@ -151,12 +176,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    private void onPhotoButtonClicked() {
+        Intent pickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        //Any type of image
+        pickerIntent.setType("image/*");
+
+        //No need download from a remote service like (drive)
+        pickerIntent.putExtra(Intent.EXTRA_LOCAL_ONLY,true);
+
+        startActivityForResult(Intent.createChooser(pickerIntent,"Choose pics from the below sources"),RC_PHOTO_PICKER);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode == RESULT_CANCELED){
-            finish();
+
+        switch (requestCode){
+            case RC_SIGN_IN:
+                if(resultCode == RESULT_CANCELED){
+                    finish();
+                }
+                break;
+            case RC_PHOTO_PICKER:
+                if(resultCode == RESULT_OK){
+                    Uri imageUri = data.getData();
+                    StorageReference storageReference = mFirebaseStorageReference.child(imageUri.getLastPathSegment());
+                    storageReference.putFile(imageUri).addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                Uri imageUrl = taskSnapshot.getDownloadUrl();
+                                FriendlyMessage friendlyMessage = new FriendlyMessage(null,mUsername,imageUrl.toString());
+                                mFirebaseDatabaseRef.push().setValue(friendlyMessage);
+
+                        }
+                    });
+                }
+                break;
         }
+
     }
 
     @Override

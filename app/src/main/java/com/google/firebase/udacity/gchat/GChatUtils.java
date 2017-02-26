@@ -11,6 +11,8 @@ import android.view.View;
 
 public class GChatUtils {
     public static final String FIREBASE_ROOT_MESSAGES = "messages";
+    public static final String FIREBASE_ROOT_STORAGE = "chat_photos";
+
 
     public static void displayAlertMessage(String message,View view){
         if( TextUtils.isEmpty(message) && view!=null){
