@@ -168,7 +168,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item);
+        switch (item.getItemId()){
+            case R.id.sign_out_menu:
+                AuthUI.getInstance().signOut(this);
+                break;
+        }
+        return true;
     }
 
     @Override
@@ -177,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.sendButton:
                 handleSendMessage();
                 break;
+
 
         }
     }
